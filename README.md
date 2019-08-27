@@ -1,3 +1,8 @@
+# gamejam progress
+
+latest - https://the-game-is-a-liar.panzerstadt.now.sh/
+20180827 - https://the-game-is-a-liar-598sefmg7.now.sh/
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
