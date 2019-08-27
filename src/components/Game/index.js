@@ -1,3 +1,9 @@
+/*
+references
+----------
+1. requestAnimationFrame with useRef: https://css-tricks.com/using-requestanimationframe-with-react-hooks/
+2.
+*/
 import React, { useEffect, useState, useRef } from "react";
 import Canvas from "../Canvas";
 
