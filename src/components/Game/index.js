@@ -9,9 +9,18 @@ import Canvas from "../Canvas";
 
 import styles from "./index.module.css";
 
+import Level from "../Level";
 import Bar from "../Blocks/Environment/Bar";
 import Character from "../Blocks/Character";
 import useControls from "../useControls";
+
+export const remap = (value, low1, high1, low2, high2) => {
+  return low2 + ((high2 - low2) * (value - low1)) / (high1 - low1);
+};
+
+export const clamp = (value, min, max) => {
+  return Math.min(Math.max(value, Math.min(min, max)), Math.max(min, max));
+};
 
 const initChar = {
   width: 50,
@@ -26,18 +35,20 @@ const initChar = {
   },
   velX: 0,
   velY: 0,
-  hasJumped: false
+  hasJumped: false,
+  jumpHeight: 50
+};
+
+const initWorld = {
+  accX: 0,
+  accY: -10,
+  height: 300,
+  width: 800
 };
 
 const Game = ({ height = 600, width = 300 }) => {
   const ctrlRef = useRef();
   const charRef = useRef();
-
-  const handleContext = ctx => {
-    // setup canvas
-    ctx.height = height;
-    ctx.width = width;
-  };
 
   // movement controller, passed to ref
   const controls = useControls();
@@ -48,7 +59,7 @@ const Game = ({ height = 600, width = 300 }) => {
   useEffect(() => {
     let loop;
     let spd = 2;
-    let ground = 0; //TODO: collision
+    let ground = 20; //TODO: collision
 
     const gameLoop = time => {
       // do something to the character
@@ -71,18 +82,18 @@ const Game = ({ height = 600, width = 300 }) => {
           setChar(p => ({
             ...p,
             bottom: p.bottom + p.velY,
-            velY: 50, // an impulse
+            velY: p.jumpHeight, // an impulse
             hasJumped: true
           }));
         } else {
           setChar(p => {
             if (p.velX > 0) {
               //console.log("slowing down", p);
-              return { ...p, velX: p.velX - 1 };
+              return { ...p, velX: p.velX - spd };
             } else if (p.velX < 0) {
-              return { ...p, velX: p.velX + 1 };
+              return { ...p, velX: p.velX + spd };
             } else if (p.velY > 0) {
-              return { ...p, vely: p.velY - 1 };
+              return { ...p, vely: p.velY - spd };
             } else {
               return p;
             }
@@ -92,7 +103,7 @@ const Game = ({ height = 600, width = 300 }) => {
         // physics events (after character action events)
         // ----------------------------------------------
         // gravity
-        if (character.bottom >= ground + character.height) {
+        if (character.bottom >= ground) {
           // if character is in the air
           setChar(p => ({ ...p, bottom: p.bottom - 2 }));
         } else {
@@ -102,15 +113,15 @@ const Game = ({ height = 600, width = 300 }) => {
         }
 
         // world movements
-        if (character.left > 50) {
-          setBar1(p => ({ x: p.x - spd, y: p.y }));
-          setBar2(p => ({ x: p.x - spd, y: p.y }));
-          setBar3(p => ({ x: p.x - spd, y: p.y }));
-        } else if (character.left < 10) {
-          setBar1(p => ({ x: p.x + spd, y: p.y }));
-          setBar2(p => ({ x: p.x + spd, y: p.y }));
-          setBar3(p => ({ x: p.x + spd, y: p.y }));
-        }
+        // if (character.left > 300) {
+        //   setBar1(p => ({ x: p.x - spd, y: p.y }));
+        //   setBar2(p => ({ x: p.x - spd, y: p.y }));
+        //   setBar3(p => ({ x: p.x - spd, y: p.y }));
+        // } else if (character.left < 10) {
+        //   setBar1(p => ({ x: p.x + spd, y: p.y }));
+        //   setBar2(p => ({ x: p.x + spd, y: p.y }));
+        //   setBar3(p => ({ x: p.x + spd, y: p.y }));
+        // }
       }
 
       loop = requestAnimationFrame(gameLoop);
@@ -122,28 +133,58 @@ const Game = ({ height = 600, width = 300 }) => {
   }, []);
   // only init gameloop once but get fresh state within loop using refs
 
-  const [bar1, setBar1] = useState({ x: 10, y: 20 });
-  const [bar2, setBar2] = useState({ x: 250, y: 30 });
-  const [bar3, setBar3] = useState({ x: 370, y: 20 });
-
   const [char, setChar] = useState(initChar);
   useEffect(() => {
     charRef.current = char;
   }, [char]);
 
+  const [world, setWorld] = useState(initWorld);
+
+  const handleGetShapes = shapes => {
+    console.log("here are the shapes used for collisions detection", shapes);
+  };
+
+  const [count, setCount] = useState(1);
+  useEffect(() => {
+    if (controls.space) {
+      setCount(p => p + 1);
+    }
+  }, [controls]);
+
+  // the world becomes more unpredictable the higher the person goes
   return (
     <>
       {JSON.stringify(controls)}
-      <div className={styles.container}>
+      <br />
+      <br />
+      <div
+        className={styles.container}
+        style={{ height: world.height, width: world.width }}
+      >
         <div className={styles.gameSpace}>
           <Character x={char.left} y={char.bottom} />
 
-          <Bar key="bar-1" x={bar1.x} y={bar1.y} />
-          <Bar key="bar-2" x={bar2.x} y={bar2.y} />
-          <Bar key="bar-3" x={bar3.x} y={bar3.y} />
+          <Level
+            seed={count}
+            difficulty={count / 5}
+            width={world.width}
+            height={world.height}
+            lie={clamp(
+              remap(
+                char.jumpHeight + char.height - char.bottom,
+                0,
+                char.jumpHeight,
+                0,
+                1
+              ),
+              0,
+              1
+            )}
+            onShapes={handleGetShapes}
+          />
         </div>
 
-        <Canvas className={styles.collision} onContext={handleContext}></Canvas>
+        {/* <Canvas className={styles.collision} onContext={handleContext}></Canvas> */}
       </div>
     </>
   );

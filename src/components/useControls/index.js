@@ -6,6 +6,7 @@ const moveSet = {
   down: false,
   left: false,
   right: false,
+  space: false,
   dunno: false
 };
 
@@ -37,7 +38,11 @@ const useControls = () => {
         case "ArrowRight":
           setControls(p => ({ ...p, right: true }));
           break;
+        case " ":
+          setControls(p => ({ ...p, space: true }));
+          break;
         default:
+          console.log(event.key);
           setControls(p => ({ ...p, dunno: true }));
           break;
       }
@@ -58,6 +63,9 @@ const useControls = () => {
         break;
       case "ArrowRight":
         setControls(p => ({ ...p, right: false }));
+        break;
+      case " ":
+        setControls(p => ({ ...p, space: false }));
         break;
       default:
         setControls(p => ({ ...p, dunno: false }));

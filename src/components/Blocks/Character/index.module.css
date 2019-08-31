@@ -1,7 +1,7 @@
 .character {
   position: absolute;
   height: 50px;
-  width: 50px;
+  width: 20px;
   background-color: salmon;
-  border-radius: 999px;
+  border-radius: 0;
 }
